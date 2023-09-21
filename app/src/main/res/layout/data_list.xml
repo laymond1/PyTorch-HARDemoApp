@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="center_horizontal"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/data_list_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginTop="@dimen/list_title_margin_top"
+        android:text=""
+        android:textAppearance="@style/TextAppearanceMainVisionNlp" />
+
+    <org.pytorch.demo.ListCardView
+        android:id="@+id/rt_har_card_kuhar_click_area"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:elevation="1dp"
+        app:descriptionRes="@string/rt_har_card_kuhar_description"
+        app:titleRes="@string/rt_har_card_kuhar_title" />
+
+    <org.pytorch.demo.ListCardView
+        android:id="@+id/rt_har_card_wisdm_click_area"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/list_content_margin"
+        android:elevation="1dp"
+        app:descriptionRes="@string/rt_har_card_wisdm_description"
+        app:titleRes="@string/rt_har_card_wisdm_title" />
+
+    <org.pytorch.demo.ListCardView
+        android:id="@+id/rt_har_card_uci_har_click_area"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/list_content_margin"
+        android:elevation="1dp"
+        app:descriptionRes="@string/rt_har_card_uci_har_description"
+        app:titleRes="@string/rt_har_card_uci_har_title" />
+
+    <org.pytorch.demo.ListCardView
+        android:id="@+id/rt_har_card_unimib_shar_click_area"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/list_content_margin"
+        android:elevation="1dp"
+        app:descriptionRes="@string/rt_har_card_unimib_shar_description"
+        app:titleRes="@string/rt_har_card_unimib_shar_title" />
+
+    <org.pytorch.demo.ListCardView
+        android:id="@+id/rt_har_card_opportunity_click_area"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/list_content_margin"
+        android:elevation="1dp"
+        app:descriptionRes="@string/rt_har_card_opportunity_description"
+        app:titleRes="@string/rt_har_card_opportunity_title" >
+
+    </org.pytorch.demo.ListCardView>
+
+    <org.pytorch.demo.ListCardView
+        android:id="@+id/rt_har_card_pamap2_click_area"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/list_content_margin"
+        android:elevation="1dp"
+        app:descriptionRes="@string/rt_har_card_pamap2_description"
+        app:titleRes="@string/rt_har_card_pamap2_title" >
+
+    </org.pytorch.demo.ListCardView>
+
+    <org.pytorch.demo.ListCardView
+        android:id="@+id/rt_har_card_wisdm2019_click_area"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/list_content_margin"
+        android:elevation="1dp"
+        app:descriptionRes="@string/rt_har_card_widsm2019_description"
+        app:titleRes="@string/rt_har_card_widsm2019_title">
+
+    </org.pytorch.demo.ListCardView>
+</LinearLayout>

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="center_horizontal"
+    android:orientation="vertical">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginTop="@dimen/list_title_margin_top"
+        android:text="@string/main_rt_har_button"
+        android:textAppearance="@style/TextAppearanceMainVisionNlp" />
+
+    <org.pytorch.demo.ListCardView
+        android:id="@+id/rt_har_card_operator_click_area"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/list_content_margin"
+        android:elevation="1dp"
+        app:descriptionRes="@string/rt_har_card_operator_description"
+        app:titleRes="@string/rt_har_card_operator_title" >
+
+    </org.pytorch.demo.ListCardView>
+
+    <org.pytorch.demo.ListCardView
+        android:id="@+id/rt_har_card_models_click_area"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/list_content_margin"
+        android:elevation="1dp"
+        app:descriptionRes="@string/rt_har_card_models_description"
+        app:titleRes="@string/rt_har_card_models_title" />
+
+
+</LinearLayout>
