@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="vision_model_name">
+        <item>mobilenet</item>
+        <item>mnasnet</item>
+        <item>marnasnet</item>
+        <item>shufflenet</item>
+        <item>resnet</item>
+        <item>squeezenet</item>
+        <item>efficientnet</item>
+        <item>harnet</item>
+        <item>rlnas</item>
+        <item>eanas</item>
+        <item>dnas</item>
+    </string-array>
+
+    <string-array name="vision_block_name">
+        <item>ConvBlock</item>
+        <item>SeparableConvBlock</item>
+        <item>MBConvBlock</item>
+        <item>ResConvBlock</item>
+        <item>ShuffleBlock</item>
+        <item>HARBlock</item>
+        <item>LSTMBlock</item>
+        <item>BiLSTMBlock</item>
+        <item>GTSResConvBlock</item>
+    </string-array>
+
+    <!-- Not used   -->
+    <string-array name="har_model_name">
+        <item>RTWCNN</item>
+        <item>HARLSTM</item>
+        <item>HARBiLSTM</item>
+        <item>HARConvLSTM</item>
+        <item>ResNetTSC</item>
+        <item>FCNTSC</item>
+    </string-array>
+    <!-- Not used   -->
+    <string-array name="har_block_name">
+        <item>LSTMBlock</item>
+        <item>BiLSTMBlock</item>
+        <item>GTSResConvBlock</item>
+    </string-array>
+
+</resources>

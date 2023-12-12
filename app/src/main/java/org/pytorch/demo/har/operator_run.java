@@ -1,14 +1,22 @@
 package org.pytorch.demo.har;
 
+import android.Manifest;
+import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.util.Log;
+import android.widget.ArrayAdapter;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 import org.pytorch.IValue;
 import org.pytorch.Module;
@@ -20,13 +28,17 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class operator_run extends AppCompatActivity {
+    private static final int REQUEST_CODE = 1001;
+    RadioGroup radioGroup;
     private int in_nc;
     private int segmentSize;
+    private String data_name;
     private int n_classes;
 
     private List<Integer> channels;
@@ -35,12 +47,12 @@ public class operator_run extends AppCompatActivity {
     public static final String INTENT_DATA_ASSET_NAME = "INTENT_DATA_ASSET_NAME";
     public static final String INTENT_TITLE_NAME = "INTENT_TITLE_NAME";
     private Module mModule;
+    private OperatorNameList operatorList;
     private Tensor mInputStats;
     //private FloatBuffer mInputTensorBuffer;
     private Tensor mInputTensor;
     private String mnameFileAbsoluteFilePath;
-    private long moduleForwardStartTime;
-    private long moduleForwardDuration;
+
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -51,324 +63,179 @@ public class operator_run extends AppCompatActivity {
         String titleName = getIntent().getStringExtra(INTENT_TITLE_NAME);
         AtomicReference<String> mname = new AtomicReference<>("");
 
-//        List<String> opss = Arrays.asList("Conv", "DilatedConv", "DepthConv", "DilatedDepthConv");
-//        List<String> opss_another = Arrays.asList("Zero", "Logit");
-//        List<String> kernel = Arrays.asList("3", "5", "7", "9"); // kernel
-
-        List<String> opss = Arrays.asList("Conv");
-        List<String> opss2 = Arrays.asList("DiConv");
-        List<String> opss3 = Arrays.asList("MaxPool", "AvgPool");
-        List<String> opss4 = Arrays.asList("Zero", "Identity");
-        List<String> kernel = Arrays.asList("1", "3", "5", "7", "9"); // kernel
-        List<String> kernel2 = Arrays.asList("3", "5"); // kernel
-
-
         switch (dataAssetName) {
-            case "WISDM":
-                in_nc = 3;
-                segmentSize = 60;
-                n_classes = 6;
-                break;
-            case "KUHAR":
+            case "Data/KUHAR.csv":
                 in_nc = 6;
                 segmentSize = 300;
-                n_classes = 18;
+                data_name = "kar";
                 break;
-            case "WISDM2019":
+            case "Data/WISDM.csv":
+                in_nc = 3;
+                segmentSize = 60;
+                data_name = "wis";
+                break;
+            case "Data/WISDM2019.csv":
                 in_nc = 6;
                 segmentSize = 200;
-                n_classes = 5;
                 break;
-            case "UCI_HAR":
+            case "Data/UCI_HAR.csv":
                 in_nc = 6;
                 segmentSize = 128;
-                n_classes = 6;
+                data_name = "uci";
                 break;
-            case "UniMiB-SHAR":
+            case "Data/UniMiB-SHAR.csv":
                 in_nc = 3;
                 segmentSize = 151;
-                n_classes = 17;
+                data_name = "uni";
                 break;
-            case "OPPORTUNITY":
+            case "Data/OPPORTUNITY.csv":
                 in_nc = 113;
                 segmentSize = 16;
-                n_classes = 18;
+                data_name = "opp";
                 break;
-            case "PAMAP2":
+            case "Data/PAMAP2.csv":
                 in_nc = 31;
                 segmentSize = 512;
         }
 
-        if (dataAssetName.equals("OPPORTUNITY")) {
-            channels = Arrays.asList(in_nc, in_nc*3, 48); //channel size list
-        }
-        else {
-            channels = Arrays.asList(in_nc*3, in_nc*3*4, 48); //channel size list
-        }
 
-        final TextView title = (TextView)findViewById(R.id.Operators_name);
+        final TextView title = (TextView) findViewById(R.id.Operators_name);
         title.setText(titleName);
-        final TextView latency_text = (TextView)findViewById(R.id.latency);
+        final TextView latency_text = (TextView) findViewById(R.id.latency);
         AssetManager am = getResources().getAssets();
-
-        String createfile = "data/data/org.pytorch.demo/"+dataAssetName+".txt";
+        // create save file
+        String createfile = "data/data/org.pytorch.demo/blocks/" + data_name + ".txt";
         File fw = new File(createfile);
+
+        AtomicReference<Spinner> spinnerRepeatCount = new AtomicReference<>(findViewById(R.id.spinner_repeat_count));
+        AtomicReference<Spinner> spinnerOperatorName = new AtomicReference<>(findViewById(R.id.spinner_operator_name));
+
+        // Create an ArrayAdapter using the string array and a default spinner layout
+        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(
+                this, R.array.repeat_count_array, android.R.layout.simple_spinner_item
+        );
+        ArrayAdapter<CharSequence> operator_adapter = ArrayAdapter.createFromResource(
+                this, R.array.vision_block_name, android.R.layout.simple_spinner_item
+        );
+        // Specify the layout to use when the list of choices appears
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        operator_adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        // Apply the adapter to the spinner
+        spinnerRepeatCount.get().setAdapter(adapter);
+        spinnerOperatorName.get().setAdapter(operator_adapter);
+
+        // operatorList
+        operatorList = new OperatorNameList();
+
         try {
-            findViewById(R.id.model_run).setOnClickListener(v-> {
-                int channel = 0;
-                float[] segment;
-                for (int ch : channels) {
+            findViewById(R.id.operator_run).setOnClickListener(v -> {
+                if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                    ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, REQUEST_CODE);
+                } else {
+                    // repeat count
+                    spinnerRepeatCount.set(findViewById(R.id.spinner_repeat_count));
+                    int repeatCount = Integer.parseInt(spinnerRepeatCount.get().getSelectedItem().toString());
+                    // block type
+                    spinnerOperatorName.set(findViewById(R.id.spinner_operator_name));
+                    String selectedBlock = spinnerOperatorName.get().getSelectedItem().toString();
+                    List<String> blocks = getBlocksBySelectedBlock(selectedBlock, operatorList);
+                    // RadioButton: out channel assuming input channel is 32.
+                    radioGroup = findViewById(R.id.channel_radio_group);
+                    int checkedId = radioGroup.getCheckedRadioButtonId();
+                    RadioButton selectedRadioButton = findViewById(checkedId);
+                    in_nc = Integer.parseInt(selectedRadioButton.getText().toString());
 
-                    String seg_size = String.valueOf(segmentSize);
-                    String in_C = String.valueOf(ch);
-                    String out_C = String.valueOf(ch);
-                    // input
-                    segment = new float[ch * segmentSize];
-                    for (int i = 0; i < ch * segmentSize; i++) {
-                        segment[i] = Float.parseFloat(String.valueOf(Math.random()));
+                    for (int i = 0; i < repeatCount; i++) {
+                        // 모델 실행 부분
+                        loadAndRunBlock(blocks, mname, latency_text, fw);
                     }
-                    mInputTensor = Tensor.fromBlob(segment, new long[]{1, ch, segmentSize, 1});
-                    // operators
-                    for (String op : opss) { // convolution type
-                        String dilation = new String();
-                        if (op.contains("Di")) dilation = "2";
-                        else dilation = "1";
-                        for (String k : kernel) { // input size
-                            Log.d("Test", "test : " + "Operators/" + dataAssetName + "/" +
-                                    op + "-" + seg_size + "x" + in_C + "-" +
-                                    seg_size + "x" + out_C + "-" +
-                                    k + "-1-" + dilation + ".pt"
-                            );
-                            mname.set("Operators/" + dataAssetName + "/" +
-                                    op + "-" + seg_size + "x" + in_C + "-" +
-                                    seg_size + "x" + out_C + "-" +
-                                    k + "-1-" + dilation + ".pt"
-                            );
-                            String mnameFileAbsoluteFilePath = new File(
-                                    Utils.assetFilePath(this, mname.get())).getAbsolutePath();
-                            // Load and initialize pytorch model
-                            mModule = Module.load(mnameFileAbsoluteFilePath);
-
-                            // Warm-up inference
-                            for (int i = 0; i < 5; i++) {
-                                mModule.forward(IValue.from(mInputTensor));
-                            }
-                            // New version
-                            int numIterations = 1000;
-                            long startTime = System.nanoTime();
-                            // Measure the latency
-                            for (int i = 0; i < numIterations; i++) {
-                                mModule.forward(IValue.from(mInputTensor));
-                            }
-                            long endTime = System.nanoTime();
-                            long elapsedTime = endTime - startTime;
-                            double averageTime = (double) elapsedTime / numIterations / 1_000_000;
-                            // Old version
-//                                long moduleForwardStartTime = (long) 0.0;
-//                                long moduleForwardDuration = (long) 0.0;
-//                                for (int k = 0; k < 1000; k++) {
-//                                    moduleForwardStartTime = SystemClock.elapsedRealtime();
-//                                    final Tensor outputTensor = mModule.forward(IValue.from(mInputTensor)).toTensor();
-//                                    moduleForwardDuration += SystemClock.elapsedRealtime() - moduleForwardStartTime;
-//                                }
-                            Log.d("Test", "test : " + op + "-" +
-                                    seg_size + "x" + in_C + "-" +
-                                    seg_size + "x" + out_C + "-" +
-                                    k + "-1-" + dilation + ": " + String.valueOf(averageTime));
-                            latency_text.setText("Time:" + String.valueOf(averageTime) + "ms");
-
-                            try (BufferedWriter writer = new BufferedWriter(new FileWriter(fw, true))) {
-                                Log.d("Test", "test : write in");
-                                writer.append(op + "-" +
-                                        seg_size + "x" + in_C + "-" +
-                                        seg_size + "x" + out_C + "-" +
-                                        "kernel:" + k + "-stride:1-dilation:" + dilation);
-                                writer.write(",");
-                                writer.write(String.valueOf(averageTime));
-                                writer.write("\n");
-                                Log.d("Test", "test : write before flush");
-                                writer.flush();
-                                Log.d("Test", "test : write before close");
-                                writer.close();
-                                Log.d("Test", "test : write after close");
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
-                        }
-                    } // end Conv
-                    // DilatedConv
-                    for (String op : opss2) {
-                        String dilation = new String();
-                        if (op.contains("Di")) dilation = "2";
-                        else dilation = "1";
-                        for (String k : kernel2) { // input size
-                            Log.d("Test", "test : " + "Operators/" + dataAssetName + "/" +
-                                    op + "-" + seg_size + "x" + in_C + "-" +
-                                    seg_size + "x" + out_C + "-" +
-                                    k + "-1-" + dilation + ".pt"
-                            );
-                            mname.set("Operators/" + dataAssetName + "/" +
-                                    op + "-" + seg_size + "x" + in_C + "-" +
-                                    seg_size + "x" + out_C + "-" +
-                                    k + "-1-" + dilation + ".pt"
-                            );
-                            String mnameFileAbsoluteFilePath = new File(
-                                    Utils.assetFilePath(this, mname.get())).getAbsolutePath();
-                            mModule = Module.load(mnameFileAbsoluteFilePath);
-
-                            // Warm-up inference
-                            for (int i = 0; i < 5; i++) {
-                                mModule.forward(IValue.from(mInputTensor));
-                            }
-                            // New version
-                            int numIterations = 1000;
-                            long startTime = System.nanoTime();
-                            // Measure the latency
-                            for (int i = 0; i < numIterations; i++) {
-                                mModule.forward(IValue.from(mInputTensor));
-                            }
-                            long endTime = System.nanoTime();
-                            long elapsedTime = endTime - startTime;
-                            double averageTime = (double) elapsedTime / numIterations / 1_000_000;
-
-                            Log.d("Test", "test : " + op + "-" +
-                                    seg_size + "x" + in_C + "-" +
-                                    seg_size + "x" + out_C + "-" +
-                                    k + "-1-" + dilation + ": " + String.valueOf(averageTime));
-                            latency_text.setText("Time:" + String.valueOf(averageTime) + "ms");
-
-                            try (BufferedWriter writer = new BufferedWriter(new FileWriter(fw, true))) {
-                                Log.d("Test", "test : write in");
-                                writer.append(op + "-" +
-                                        seg_size + "x" + in_C + "-" +
-                                        seg_size + "x" + out_C + "-" +
-                                        "kernel:" + k + "-stride:1-dilation:" + dilation);
-                                writer.write(",");
-                                writer.write(String.valueOf(averageTime));
-                                writer.write("\n");
-                                Log.d("Test", "test : write before flush");
-                                writer.flush();
-                                Log.d("Test", "test : write before close");
-                                writer.close();
-                                Log.d("Test", "test : write after close");
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
-                        }
-                    } // end Dilated Conv
-                    // MaxPool, AVGPool
-                    for (String op : opss3) {
-                        for (String k : kernel2) { // input size
-                            Log.d("Test", "test : " + "Operators/" + dataAssetName + "/" +
-                                    op + "-" + seg_size + "x" + in_C + "-" +
-                                    seg_size + "x" + out_C + "-" +
-                                    k + "-1" + ".pt"
-                            );
-                            mname.set("Operators/" + dataAssetName + "/" +
-                                    op + "-" + seg_size + "x" + in_C + "-" +
-                                    seg_size + "x" + out_C + "-" +
-                                    k + "-1" + ".pt"
-                            );
-                            String mnameFileAbsoluteFilePath = new File(
-                                    Utils.assetFilePath(this, mname.get())).getAbsolutePath();
-                            mModule = Module.load(mnameFileAbsoluteFilePath);
-
-                            // Warm-up inference
-                            for (int i = 0; i < 5; i++) {
-                                mModule.forward(IValue.from(mInputTensor));
-                            }
-                            // New version
-                            int numIterations = 1000;
-                            long startTime = System.nanoTime();
-                            // Measure the latency
-                            for (int i = 0; i < numIterations; i++) {
-                                mModule.forward(IValue.from(mInputTensor));
-                            }
-                            long endTime = System.nanoTime();
-                            long elapsedTime = endTime - startTime;
-                            double averageTime = (double) elapsedTime / numIterations / 1_000_000;
-
-                            Log.d("Test", "test : " + op + "-" +
-                                    seg_size + "x" + in_C + "-" +
-                                    seg_size + "x" + out_C + "-" +
-                                    k + "-1" + ": " + String.valueOf(averageTime));
-                            latency_text.setText("Time:" + String.valueOf(averageTime) + "ms");
-
-                            try (BufferedWriter writer = new BufferedWriter(new FileWriter(fw, true))) {
-                                Log.d("Test", "test : write in");
-                                writer.append(op + "-" +
-                                        seg_size + "x" + in_C + "-" +
-                                        seg_size + "x" + out_C + "-" +
-                                        "kernel:" + k + "-stride:1");
-                                writer.write(",");
-                                writer.write(String.valueOf(averageTime));
-                                writer.write("\n");
-                                Log.d("Test", "test : write before flush");
-                                writer.flush();
-                                Log.d("Test", "test : write before close");
-                                writer.close();
-                                Log.d("Test", "test : write after close");
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
-                        }
-                    } // end Max & Avg Pool
-                    // Zero & Identity
-                    for (String op : opss4) {
-                        Log.d("Test", "test : " + "Operators/" + dataAssetName + "/" +
-                                op + "-" + seg_size + "x" + in_C + "-" +
-                                seg_size + "x" + out_C + ".pt"
-                        );
-                        mname.set("Operators/" + dataAssetName + "/" +
-                                op + "-" + seg_size + "x" + in_C + "-" +
-                                seg_size + "x" + out_C + ".pt"
-                        );
-                        String mnameFileAbsoluteFilePath = new File(
-                                Utils.assetFilePath(this, mname.get())).getAbsolutePath();
-                        mModule = Module.load(mnameFileAbsoluteFilePath);
-
-                        // Warm-up inference
-                        for (int i = 0; i < 5; i++) {
-                            mModule.forward(IValue.from(mInputTensor));
-                        }
-                        // New version
-                        int numIterations = 1000;
-                        long startTime = System.nanoTime();
-                        // Measure the latency
-                        for (int i = 0; i < numIterations; i++) {
-                            mModule.forward(IValue.from(mInputTensor));
-                        }
-                        long endTime = System.nanoTime();
-                        long elapsedTime = endTime - startTime;
-                        double averageTime = (double) elapsedTime / numIterations / 1_000_000;
-
-                        Log.d("Test", "test : " + op + "-" +
-                                seg_size + "x" + in_C + "-" +
-                                seg_size + "x" + out_C + ": " + String.valueOf(averageTime));
-                        latency_text.setText("Time:" + String.valueOf(averageTime) + "ms");
-
-                        try (BufferedWriter writer = new BufferedWriter(new FileWriter(fw, true))) {
-                            Log.d("Test", "test : write in");
-                            writer.append(op + "-" +
-                                    seg_size + "x" + in_C + "-" +
-                                    seg_size + "x" + out_C);
-                            writer.write(",");
-                            writer.write(String.valueOf(averageTime));
-                            writer.write("\n");
-                            Log.d("Test", "test : write before flush");
-                            writer.flush();
-                            Log.d("Test", "test : write before close");
-                            writer.close();
-                            Log.d("Test", "test : write after close");
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    } // end Zero & Identity
-                } // end channels loop
+                }
             });
         } catch (Exception e) {
-            e.printStackTrace();
-            Toast.makeText(this, "The specified file was not found", Toast.LENGTH_SHORT).show();
+            throw new RuntimeException(e);
         }
     }
+
+
+    private List<String> getBlocksBySelectedBlock(String selectedBlock, OperatorNameList operatorList) {
+        List<String> blocks;
+
+        switch (selectedBlock) {
+            case "ConvBlock":
+                blocks = operatorList.ConvBlock;
+                break;
+            case "SeparableConvBlock":
+                blocks = operatorList.SeparableConvBlock;
+                break;
+            case "MBConvBlock":
+                blocks = operatorList.MBConvBlock;
+                break;
+            case "ResConvBlock":
+                blocks = operatorList.ResConvBlock;
+                break;
+            case "ShuffleBlock":
+                blocks = operatorList.ShuffleBlock;
+                break;
+            case "HARBlock":
+                blocks = operatorList.HARBlock;
+                break;
+            case "LSTMBlock":
+                blocks = operatorList.LSTMBlock;
+                break;
+            case "BiLSTMBlock":
+                blocks = operatorList.BiLSTMBlock;
+                break;
+            case "GTSResConvBlock":
+                blocks = operatorList.GTSResConvBlock;
+                break;
+            default:
+                blocks = new ArrayList<>(); // setting default: proposed network
+                break;
+        }
+
+        return blocks;
+    }
+
+    private void loadAndRunBlock(List<String> blocks_list, AtomicReference<String> mname, TextView latency_text, File fw) {
+        // models loop
+        for (String block : blocks_list) {
+            mname.set("/storage/self/primary/Download/" + data_name + "/blocks/" + block + ".pt");
+
+            // Model file absolute path
+//            final String moduleFileAbsoluteFilePath = new File(Utils.assetFilePath(this, mname.get())).getAbsolutePath();
+            final String moduleFileAbsoluteFilePath = new File(Utils.externalFilePath(this, mname.get())).getAbsolutePath();
+
+            File file = new File(mname.get());
+
+            // Load and initialize pytorch model
+            mModule = Module.load(moduleFileAbsoluteFilePath);
+
+            // run model runner
+            ModelRunner runner = new ModelRunner(mModule, in_nc, segmentSize);
+
+            double averageTime = 0;
+            // measure average latency
+            try {
+                // run
+                averageTime = runner.runModel();
+
+                Log.d("Test",
+                        data_name + " " + block + ": " + String.valueOf(averageTime));
+                latency_text.setText("Time:" + String.valueOf(averageTime) + "ms");
+            } catch (IOException e) {
+                e.printStackTrace();
+                Toast.makeText(this, "The dataset was not readed", Toast.LENGTH_SHORT).show();
+            }
+            // save to csv
+            try (BufferedWriter writer = new BufferedWriter(new FileWriter(fw, true))) {
+                writer.append(data_name + "," + block + "," + String.valueOf(averageTime));
+                writer.write("\n");
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+
+
 }

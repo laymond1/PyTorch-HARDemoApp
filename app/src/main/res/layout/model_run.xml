@@ -7,7 +7,7 @@
     android:background="@color/nlpPrimaryColor">
 
     <TextView
-        android:id="@+id/Operators_name"
+        android:id="@+id/Models_name"
         android:text=""
         android:textColor="@color/textColor"
         android:textSize="25sp"
@@ -38,11 +38,26 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginLeft="16dp"
-        android:layout_marginTop="32dp"
+        android:layout_marginTop="108dp"
         android:layout_marginRight="16dp"
+        app:layout_constraintBottom_toTopOf="@+id/model_run"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/latency" />
+
+    <Spinner
+        android:id="@+id/spinner_model_name"
+        android:layout_width="match_parent"
+        android:layout_height="30dp"
+        android:layout_marginBottom="52dp"
+        android:spinnerMode="dropdown"
+        app:layout_constraintBottom_toTopOf="@+id/latency"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/Models_name"
+        app:layout_constraintVertical_bias="0.85" />
 
     <TextView
         android:id="@+id/latency"

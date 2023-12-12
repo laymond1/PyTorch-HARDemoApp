@@ -30,7 +30,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -45,6 +45,7 @@ public class model_run extends AppCompatActivity {
     public static final String INTENT_DATA_ASSET_NAME = "INTENT_DATA_ASSET_NAME"; // data path
     public static final String INTENT_TITLE_NAME = "INTENT_TITLE_NAME"; // model name
     private Module mModule;
+    private ModelNameList modelList;
     private Tensor mInputStats;
     //private FloatBuffer mInputTensorBuffer;
     private Tensor mInputTensor;
@@ -57,19 +58,6 @@ public class model_run extends AppCompatActivity {
         String dataAssetName = getIntent().getStringExtra(INTENT_DATA_ASSET_NAME);
         String titleName = getIntent().getStringExtra(INTENT_TITLE_NAME);
         AtomicReference<String> mname = new AtomicReference<>("");
-
-        List<String> har_models = Arrays.asList("RTWCNN", "HARLSTM", "HARBiLSTM", "HARConvLSTM", "ResNetTSC", "FCNTSC");
-        List<String> vision_models = Arrays.asList(
-//                "mobilenet_v2", "mobilenet_v3_small", "mobilenet_v3_large",
-//                "mnasnet0_5", "mnasnet0_75", "mnasnet1_0", "mnasnet1_3",
-//                "shufflenet_v2_x0_5", "shufflenet_v2_x1_0", "shufflenet_v2_x1_5", "shufflenet_v2_x2_0",
-//                "resnet18", "resnet34", "resnet50", "resnet101", "resnext50_32x4d", "resnext101_32x8d", "resnext101_64x4d",
-//                "squeezenet1_0", "squeezenet1_1",
-//                "efficientnet_b0", "efficientnet_b1", "efficientnet_b2", "efficientnet_b3", "efficientnet_b4", "efficientnet_b5", "efficientnet_b6", "efficientnet_b7",
-                "efficientnet_v2_s", "efficientnet_v2_m", "efficientnet_v2_l");
-
-//        List<String> harnas_models = Arrays.asList("RLNAS");
-        List<String> harnas_models = Arrays.asList("EANAS", "DNAS");
 
         switch (dataAssetName) {
             case "Data/KUHAR.csv":
@@ -107,24 +95,31 @@ public class model_run extends AppCompatActivity {
         }
 
 
-        final TextView title = (TextView) findViewById(R.id.Operators_name);
+        final TextView title = (TextView) findViewById(R.id.Models_name);
         title.setText(titleName); // layout의 id 중 model_name에 할당
         final TextView latency_text = (TextView) findViewById(R.id.latency);
         AssetManager am = getResources().getAssets();
         // create save file
-        String createfile = "data/data/org.pytorch.demo/" + data_name + ".txt";
+        String createfile = "data/data/org.pytorch.demo/models/" + data_name + ".txt";
         File fw = new File(createfile);
 
         AtomicReference<Spinner> spinnerRepeatCount = new AtomicReference<>(findViewById(R.id.spinner_repeat_count));
+        AtomicReference<Spinner> spinnerModelName = new AtomicReference<>(findViewById(R.id.spinner_model_name));
         // Create an ArrayAdapter using the string array and a default spinner layout
         ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(
                 this, R.array.repeat_count_array, android.R.layout.simple_spinner_item
         );
+        ArrayAdapter<CharSequence> model_adapter = ArrayAdapter.createFromResource(
+                this, R.array.vision_model_name, android.R.layout.simple_spinner_item
+        );
         // Specify the layout to use when the list of choices appears
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        model_adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         // Apply the adapter to the spinner
         spinnerRepeatCount.get().setAdapter(adapter);
-
+        spinnerModelName.get().setAdapter(model_adapter);
+        // modelList
+        modelList = new ModelNameList();
 
         try { // Data Load
             InputStreamReader x_is = new InputStreamReader(am.open(dataAssetName));
@@ -136,11 +131,14 @@ public class model_run extends AppCompatActivity {
                     ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, REQUEST_CODE);
                 } else {
                     spinnerRepeatCount.set(findViewById(R.id.spinner_repeat_count));
+                    spinnerModelName.set(findViewById(R.id.spinner_model_name));
+                    String selectedModel = spinnerModelName.get().getSelectedItem().toString();
+                    List<String> models = getModelsBySelectedModel(selectedModel, modelList);
                     int repeatCount = Integer.parseInt(spinnerRepeatCount.get().getSelectedItem().toString());
 
                     for (int i = 0; i < repeatCount; i++) {
                         // 모델 실행 부분
-                        loadAndRunModel(harnas_models, mname, latency_text, fw);
+                        loadAndRunModel(models, mname, latency_text, fw);
                     }
                 }
             });
@@ -149,10 +147,52 @@ public class model_run extends AppCompatActivity {
         }
     }
 
+    private List<String> getModelsBySelectedModel(String selectedModel, ModelNameList modelList) {
+        List<String> models;
+
+        switch (selectedModel) {
+            case "mobilenet":
+                models = modelList.mobilenet;
+                break;
+            case "mnasnet":
+                models = modelList.mnasnet;
+                break;
+            case "marnasnet":
+                models = modelList.marnasnet;
+                break;
+            case "shufflenet":
+                models = modelList.shufflenet;
+                break;
+            case "resnet":
+                models = modelList.resnet;
+                break;
+            case "efficientnet":
+                models = modelList.efficientnet;
+                break;
+            case "harnet":
+                models = modelList.harnet;
+                break;
+            case "rlnas":
+                models = modelList.rlnas;
+                break;
+            case "eanas":
+                models = modelList.eanas;
+                break;
+            case "dnas":
+                models = modelList.dnas;
+                break;
+            default:
+                models = new ArrayList<>(); // setting default: proposed network
+                break;
+        }
+
+        return models;
+    }
+
     private void loadAndRunModel(List<String> models_list, AtomicReference<String> mname, TextView latency_text, File fw) {
         // models loop
         for (String hm : models_list) {
-            mname.set("/storage/self/primary/Download/" + data_name + "/" + hm + ".pt");
+            mname.set("/storage/self/primary/Download/" + data_name + "/models/" + hm + ".pt");
 
             // Model file absolute path
 //            final String moduleFileAbsoluteFilePath = new File(Utils.assetFilePath(this, mname.get())).getAbsolutePath();
@@ -169,7 +209,12 @@ public class model_run extends AppCompatActivity {
             double averageTime = 0;
             // measure average latency
             try {
-                averageTime = runner.runModel();
+                if (hm.equals("EANAS") | hm.equals("DNAS")) {
+                    averageTime = runner.runModel2d();
+                } else {
+                    averageTime = runner.runModel();
+                }
+
                 Log.d("Test",
                         data_name + " " + hm + ": " + String.valueOf(averageTime));
                 latency_text.setText("Time:" + String.valueOf(averageTime) + "ms");

@@ -20,22 +20,8 @@
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent" />
 
-    <TextView
-        android:id="@+id/latency"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="256dp"
-        android:text="@string/print"
-        android:textAlignment="center"
-        android:textColor="@color/textColor"
-        android:textSize="15sp"
-        app:layout_constraintBottom_toTopOf="@id/model_run"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="parent" />
-
     <Button
-        android:id="@+id/model_run"
+        android:id="@+id/operator_run"
         style="@style/Button"
         android:layout_width="match_parent"
         android:layout_height="@dimen/button_height"
@@ -50,6 +36,98 @@
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         tools:text="Conv Run" />
+
+    <Spinner
+        android:id="@+id/spinner_operator_name"
+        android:layout_width="match_parent"
+        android:layout_height="30dp"
+        android:layout_marginBottom="52dp"
+        android:spinnerMode="dropdown"
+        app:layout_constraintBottom_toTopOf="@+id/latency"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/Operators_name"
+        app:layout_constraintVertical_bias="0.85" />
+
+    <Spinner
+        android:id="@+id/spinner_repeat_count"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="16dp"
+        android:layout_marginTop="108dp"
+        android:layout_marginRight="16dp"
+        app:layout_constraintBottom_toTopOf="@+id/operator_run"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/latency"
+        app:layout_constraintVertical_bias="0.0" />
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintBottom_toTopOf="@+id/operator_run"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/spinner_repeat_count">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingStart="8dp"
+            android:paddingTop="8dp"
+            android:paddingEnd="8dp"
+            android:paddingBottom="8dp"
+            android:text="Number of input channels"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <RadioGroup
+            android:id="@+id/channel_radio_group"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            app:layout_constraintBottom_toTopOf="@+id/operator_run"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/spinner_repeat_count">
+
+            <RadioButton
+                android:id="@+id/radio_button_ch32"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="32" />
+
+            <RadioButton
+                android:id="@+id/radio_button_ch64"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="64" />
+
+            <RadioButton
+                android:id="@+id/radio_button_ch128"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="128" />
+        </RadioGroup>
+
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/latency"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="256dp"
+        android:text="@string/print"
+        android:textAlignment="center"
+        android:textColor="@color/textColor"
+        android:textSize="15sp"
+        app:layout_constraintBottom_toTopOf="@id/operator_run"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

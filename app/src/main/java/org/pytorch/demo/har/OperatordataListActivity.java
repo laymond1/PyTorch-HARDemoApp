@@ -49,8 +49,7 @@ public class OperatordataListActivity extends AbstractListActivity {
                         modelName+"/KUHAR.pt");
             };
             intent.putExtra(operator_run.INTENT_DATA_ASSET_NAME,
-                    "KUHAR");
-//                    "Data/KUHAR.csv");
+                    "Data/KUHAR.csv");
             intent.putExtra(operator_run.INTENT_TITLE_NAME,
                     modelName+ " on KUHAR");
             startActivity(intent);
@@ -66,8 +65,7 @@ public class OperatordataListActivity extends AbstractListActivity {
                         modelName+"/WISDM2019.pt");
             };
             intent.putExtra(operator_run.INTENT_DATA_ASSET_NAME,
-                    "WISDM2019");
-//                    "Data/WISDM2019.csv");
+                    "Data/WISDM2019.csv");
             intent.putExtra(operator_run.INTENT_TITLE_NAME,
                     modelName+ " on WISDM2019");
             startActivity(intent);
@@ -83,7 +81,8 @@ public class OperatordataListActivity extends AbstractListActivity {
                         modelName+"/WISDM.pt");
             };
             intent.putExtra(operator_run.INTENT_DATA_ASSET_NAME,
-                    "WISDM");
+                    "Data/WISDM.csv");
+
             intent.putExtra(operator_run.INTENT_TITLE_NAME,
                     modelName+ " on WISDM");
             startActivity(intent);
@@ -99,7 +98,7 @@ public class OperatordataListActivity extends AbstractListActivity {
                         modelName+"/UCI_HAR.pt");
             };
             intent.putExtra(operator_run.INTENT_DATA_ASSET_NAME,
-                    "UCI_HAR");
+                    "Data/UCI_HAR.csv");
             intent.putExtra(operator_run.INTENT_TITLE_NAME,
                     modelName+ " on UCI_HAR");
             startActivity(intent);
@@ -115,7 +114,7 @@ public class OperatordataListActivity extends AbstractListActivity {
                         modelName+"/UniMiB-SHAR.pt");
             };
             intent.putExtra(operator_run.INTENT_DATA_ASSET_NAME,
-                    "UniMiB-SHAR");
+                    "Data/UniMiB-SHAR.csv");
             intent.putExtra(operator_run.INTENT_TITLE_NAME,
                     modelName+ " on UniMiB-SHAR");
             startActivity(intent);
@@ -131,7 +130,7 @@ public class OperatordataListActivity extends AbstractListActivity {
                         modelName+"/OPPORTUNITY.pt");
             };
             intent.putExtra(operator_run.INTENT_DATA_ASSET_NAME,
-                    "OPPORTUNITY");
+                    "Data/OPPORTUNITY.csv");
             intent.putExtra(operator_run.INTENT_TITLE_NAME,
                     modelName+ " on OPPORTUNITY");
             startActivity(intent);
@@ -147,7 +146,7 @@ public class OperatordataListActivity extends AbstractListActivity {
                         modelName+"/PAMAP2.pt");
             };
             intent.putExtra(operator_run.INTENT_DATA_ASSET_NAME,
-                    "PAMAP2");
+                    "Data/PAMAP2.csv");
             intent.putExtra(operator_run.INTENT_TITLE_NAME,
                     modelName+ " on PAMAP2");
             startActivity(intent);

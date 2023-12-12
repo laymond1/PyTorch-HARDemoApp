@@ -27,6 +27,34 @@ public class ModelRunner {
         for (int i = 0; i < in_nc * segmentSize; i++) {
             segment[i] = Float.parseFloat(String.valueOf(Math.random()));
         }
+        Tensor mInputTensor = Tensor.fromBlob(segment, new long[]{1, in_nc, segmentSize});
+
+        // Warm-up inference
+        for (int i = 0; i < 5; i++) {
+            mModule.forward(IValue.from(mInputTensor));
+        }
+        // Main Inference
+        int numIterations = 100;
+        long startTime = System.nanoTime();
+        // Measure the latency
+        for (int i = 0; i < numIterations; i++) {
+            mModule.forward(IValue.from(mInputTensor));
+        }
+        long endTime = System.nanoTime();
+        long elapsedTime = endTime - startTime;
+        averageTime = (double) elapsedTime / numIterations / 1_000_000;
+
+        return averageTime;
+    }
+
+    public double runModel2d() throws IOException {
+        double averageTime = 0;
+
+        // create input tensor
+        float[] segment = new float[in_nc * segmentSize];
+        for (int i = 0; i < in_nc * segmentSize; i++) {
+            segment[i] = Float.parseFloat(String.valueOf(Math.random()));
+        }
         Tensor mInputTensor = Tensor.fromBlob(segment, new long[]{1, in_nc, segmentSize, 1});
 
         // Warm-up inference
