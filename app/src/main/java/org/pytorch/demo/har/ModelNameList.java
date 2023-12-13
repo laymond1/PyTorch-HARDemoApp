@@ -17,5 +17,5 @@ public class ModelNameList {
     // HARNAS models
     List<String> rlnas = Arrays.asList("RLNAS");
     List<String> eanas = Arrays.asList("EANAS");
-    List<String> dnas = Arrays.asList("DNAS");
+    List<String> dnas = Arrays.asList("DNAS", "OPPA31");
 }

@@ -209,7 +209,7 @@ public class model_run extends AppCompatActivity {
             double averageTime = 0;
             // measure average latency
             try {
-                if (hm.equals("EANAS") | hm.equals("DNAS")) {
+                if (hm.equals("EANAS") | hm.equals("DNAS") | hm.equals("OPPA31")) {
                     averageTime = runner.runModel2d();
                 } else {
                     averageTime = runner.runModel();
